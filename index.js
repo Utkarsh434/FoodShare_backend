@@ -13,7 +13,7 @@ connectDB();
 //middleware
 // CORS Configuration
 const corsOptions = {
-    origin: 'https://food-share-inky.vercel.app', // Your frontend URL
+    origin: 'https://food-share-inky.vercel.app', // frontend URL
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
