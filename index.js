@@ -13,7 +13,7 @@ connectDB();
 //middleware
 // CORS Configuration
 const corsOptions = {
-    origin: 'http://localhost:5173', // Your frontend URL
+    origin: 'https://food-share-frontend-taupe.vercel.app/', // Your frontend URL
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
