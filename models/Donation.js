@@ -6,11 +6,9 @@ const donationSchema = new mongoose.Schema({
     required: true,
     ref: 'User',
   },
-  // --- NEW FIELD ---
-  // This will store the ID of the user who claims the donation.
   receiver: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // It also references the User model
+    ref: 'User',
   },
   category: {
     type: String,

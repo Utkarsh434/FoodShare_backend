@@ -41,31 +41,40 @@ const getAvailableDonations = async (req, res) => {
     }
 };
 
-// @desc    Claim a donation
+// @desc    Claim a donation (handles race conditions)
 // @route   PUT /api/donations/:id/claim
 // @access  Private (Receivers only)
 const claimDonation = async (req, res) => {
-    try {
-        const donation = await Donation.findById(req.params.id);
+  try {
+    const donationId = req.params.id;
+    // We get the user's ID from the 'protect' middleware
+    const receiverId = req.user.id;
 
-        if (!donation) {
-            return res.status(404).json({ msg: 'Donation not found' });
-        }
-        if (donation.status !== 'available') {
-            return res.status(400).json({ msg: 'Donation is no longer available' });
-        }
+    // This is the atomic operation.
+    // It finds a document that matches BOTH the ID and the 'available' status,
+    // and updates it in a single, indivisible step.
+    const updatedDonation = await Donation.findOneAndUpdate(
+      { _id: donationId, status: 'available' },
+      { 
+        status: 'claimed',
+        receiver: receiverId // Assign the logged-in user as the receiver
+      },
+      { new: true } // This option tells Mongoose to return the document after the update
+    );
 
-        // --- MODIFICATION: Store the receiver's ID ---
-        donation.status = 'claimed';
-        donation.receiver = req.user.id; // Assign the logged-in user as the receiver
-
-        await donation.save();
-        res.json({ msg: 'Donation claimed successfully', donation });
-
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send('Server Error');
+    // If 'updatedDonation' is null, it means no document was found that met
+    // the criteria (i.e., it was already claimed by someone else in the time gap).
+    if (!updatedDonation) {
+      return res.status(409).json({ msg: 'Sorry, this donation has already been claimed.' });
     }
+
+    // If the update was successful, send a success response.
+    res.status(200).json({ msg: 'Donation claimed successfully', donation: updatedDonation });
+
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send('Server Error');
+  }
 };
 
 // --- NEW FUNCTION ---
