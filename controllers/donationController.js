@@ -49,10 +49,6 @@ const claimDonation = async (req, res) => {
     const donationId = req.params.id;
     // We get the user's ID from the 'protect' middleware
     const receiverId = req.user.id;
-
-    // This is the atomic operation.
-    // It finds a document that matches BOTH the ID and the 'available' status,
-    // and updates it in a single, indivisible step.
     const updatedDonation = await Donation.findOneAndUpdate(
       { _id: donationId, status: 'available' },
       { 
@@ -62,8 +58,6 @@ const claimDonation = async (req, res) => {
       { new: true } // This option tells Mongoose to return the document after the update
     );
 
-    // If 'updatedDonation' is null, it means no document was found that met
-    // the criteria (i.e., it was already claimed by someone else in the time gap).
     if (!updatedDonation) {
       return res.status(409).json({ msg: 'Sorry, this donation has already been claimed.' });
     }
